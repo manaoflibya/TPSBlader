@@ -19,6 +19,7 @@ public:
 	float lastAttackAnimPlayRateTime;
 	float comboAttackAnimPlayRateTime;
 	float dashPlayRateTime;
+	float dashPlayAnimRateTime;
 	float bladerAttackSpeed;
 	float dashSpeed;
 	bool isDuringDash;
@@ -32,8 +33,6 @@ enum HeroAttackCount
 	Attack_1 = 1,
 	Attack_2 = 2,
 	Attack_3 = 3,
-	Attack_4 = 4,
-
 };
 UCLASS()
 class TPSBLADER_API ABlader : public ABladerCharacter

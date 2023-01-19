@@ -35,51 +35,29 @@ ABlader::ABlader()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	attackMaxCount = 4;
+	attackMaxCount = 3;
 
 	bladerInfo = new BladerInfo();
+
 	bladerInfo->attackCount = 0;
 	bladerInfo->specialAttackCount = 0;
+
+	bladerInfo->comboAttackAnimPlayRateTime = 1.0f;
+
 	bladerInfo->firstAttackAnimPlayRateTime = 0.5f;
 	bladerInfo->attackAnimPlayRateTime = 0.7f;
-	bladerInfo->lastAttackAnimPlayRateTime = 1.2f;
-	bladerInfo->comboAttackAnimPlayRateTime = 1.0f;
+	bladerInfo->lastAttackAnimPlayRateTime = 1.3f;
+
 	bladerInfo->dashPlayRateTime = 1.0f;
+	bladerInfo->dashPlayAnimRateTime = 0.35f;
+	bladerInfo->dashSpeed = 4500.0f;
+
 	bladerInfo->isDuringAttack = false;
 	bladerInfo->isDuringSpecialAttack = false;
 	bladerInfo->isDuringDash = false;
-	bladerInfo->isDuringSpecialAttack = false;
-	bladerInfo->bladerAttackSpeed = 0.4;
-	bladerInfo->dashSpeed = 3000.0f;
 }
 
-void ABlader::MoveForward(float value)
-{
-	if ((Controller != nullptr) && (value != 0.0f) && !bladerInfo->isDuringAttack && !bladerInfo->isDuringSpecialAttack)
-	{
-		AttackCountInit();
 
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, value);
-	}
-}
-
-void ABlader::MoveRight(float value)
-{
-	if ((Controller != nullptr) && (value != 0.0f) && !bladerInfo->isDuringAttack && !bladerInfo->isDuringSpecialAttack)
-	{
-		AttackCountInit();
-
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		AddMovementInput(Direction, value);
-	}
-}
 
 void ABlader::TurnAtRate(float rate)
 {
@@ -93,10 +71,10 @@ void ABlader::LookUpAtRate(float rate)
 
 void ABlader::Attack()
 {
-	if (bladerInfo->isDuringAttack == true && bladerInfo->isDuringSpecialAttack == true)
+	if (bladerInfo->isDuringAttack == true || bladerInfo->isDuringSpecialAttack == true)
 	{
 		GEngine->AddOnScreenDebugMessage(0, 1, FColor::Red, TEXT("is During Attack"));
-
+		
 		return;
 	}
 
@@ -111,50 +89,35 @@ void ABlader::Attack()
 
 	switch (bladerInfo->attackCount)
 	{
-	case Attack_1:
-	{
-		if (IsValid(Attack_AnimMontage_1))
+		case Attack_1:
 		{
-			PlayAnimMontage(Attack_AnimMontage_1, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->firstAttackAnimPlayRateTime;
-		}
-	}
-	break;
-	case Attack_2:
-	{
-		if (IsValid(Attack_AnimMontage_2))
-		{
-			PlayAnimMontage(Attack_AnimMontage_2, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->attackAnimPlayRateTime;
-
-		}
-	}
-	break;
-	case Attack_3:
-	{
-		if (IsValid(Attack_AnimMontage_3))
-		{
-			PlayAnimMontage(Attack_AnimMontage_3, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->attackAnimPlayRateTime;
-
-		}
-	}
-	break;
-	case Attack_4:
-	{
-		if (IsValid(Attack_AnimMontage_4))
-		{
-			PlayAnimMontage(Attack_AnimMontage_4, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->lastAttackAnimPlayRateTime;
-
+			if (IsValid(Attack_AnimMontage_1))
+			{
+				PlayAnimMontage(Attack_AnimMontage_1, bladerInfo->comboAttackAnimPlayRateTime);
+				playRateTime = bladerInfo->firstAttackAnimPlayRateTime;
+			}
 		}
 		break;
-	default:
-	{
-		playRateTime = 12;
-	}
-	break;
-	}
+		case Attack_2:
+		{
+			if (IsValid(Attack_AnimMontage_2))
+			{
+				PlayAnimMontage(Attack_AnimMontage_2, bladerInfo->comboAttackAnimPlayRateTime);
+				playRateTime = bladerInfo->attackAnimPlayRateTime;
+
+			}
+		}
+		break;
+		case Attack_3:
+		{
+			if (IsValid(Attack_AnimMontage_3))
+			{
+				PlayAnimMontage(Attack_AnimMontage_3, bladerInfo->comboAttackAnimPlayRateTime);
+				playRateTime = bladerInfo->lastAttackAnimPlayRateTime;
+
+			}
+		}
+		break;
 	}
 
 	bladerInfo->isDuringAttack = true;
@@ -163,7 +126,7 @@ void ABlader::Attack()
 
 void ABlader::SpecialAttack()
 {
-	if (bladerInfo->isDuringAttack == true && bladerInfo->isDuringSpecialAttack == true)
+	if (bladerInfo->isDuringAttack == true || bladerInfo->isDuringSpecialAttack == true)
 	{
 		GEngine->AddOnScreenDebugMessage(0, 1, FColor::Red, TEXT("is During Special Attack"));
 
@@ -181,50 +144,35 @@ void ABlader::SpecialAttack()
 
 	switch (bladerInfo->specialAttackCount)
 	{
-	case Attack_1:
-	{
-		if (IsValid(Attack_AnimMontage_1))
+		case Attack_1:
 		{
-			PlayAnimMontage(Special_Attack_AnimMontage_1, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->firstAttackAnimPlayRateTime;
-		}
-	}
-	break;
-	case Attack_2:
-	{
-		if (IsValid(Attack_AnimMontage_2))
-		{
-			PlayAnimMontage(Special_Attack_AnimMontage_2, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->attackAnimPlayRateTime;
-
-		}
-	}
-	break;
-	case Attack_3:
-	{
-		if (IsValid(Attack_AnimMontage_3))
-		{
-			PlayAnimMontage(Special_Attack_AnimMontage_3, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->attackAnimPlayRateTime;
-
-		}
-	}
-	break;
-	case Attack_4:
-	{
-		if (IsValid(Attack_AnimMontage_4))
-		{
-			PlayAnimMontage(Special_Attack_AnimMontage_4, bladerInfo->comboAttackAnimPlayRateTime);
-			playRateTime = bladerInfo->lastAttackAnimPlayRateTime;
-
+			if (IsValid(Attack_AnimMontage_1))
+			{
+				PlayAnimMontage(Special_Attack_AnimMontage_1, bladerInfo->comboAttackAnimPlayRateTime);
+				playRateTime = bladerInfo->firstAttackAnimPlayRateTime;
+			}
 		}
 		break;
-	default:
-	{
-		playRateTime = 12;
-	}
-	break;
-	}
+		case Attack_2:
+		{
+			if (IsValid(Attack_AnimMontage_2))
+			{
+				PlayAnimMontage(Special_Attack_AnimMontage_2, bladerInfo->comboAttackAnimPlayRateTime);
+				playRateTime = bladerInfo->attackAnimPlayRateTime;
+
+			}
+		}
+		break;
+		case Attack_3:
+		{
+			if (IsValid(Attack_AnimMontage_3))
+			{
+				PlayAnimMontage(Special_Attack_AnimMontage_3, bladerInfo->comboAttackAnimPlayRateTime);
+				playRateTime = bladerInfo->attackAnimPlayRateTime;
+
+			}
+		}
+		break;
 	}
 
 	bladerInfo->isDuringSpecialAttack = true;
@@ -244,25 +192,31 @@ void ABlader::SpecialAttackCountInit()
 
 void ABlader::DashStart()
 {
-	const FVector ForwardDir = this->GetActorRotation().Vector();
-	LaunchCharacter(ForwardDir * bladerInfo->dashSpeed, true, true);
-
-	if (IsValid(Rolling_AnimMontage))
+	if (IsValid(Rolling_AnimMontage) && !bladerInfo->isDuringDash)
 	{
+		const FVector ForwardDir = this->GetActorRotation().Vector();
+		LaunchCharacter(ForwardDir * bladerInfo->dashSpeed, true, true);
+		FTimerHandle timeHander;
+
 		bladerInfo->isDuringDash = true;
 
 		PlayAnimMontage(Rolling_AnimMontage, bladerInfo->dashPlayRateTime);
-	}
 
+		GetWorldTimerManager().SetTimer(timeHander, this, &ABlader::DashEnd, bladerInfo->dashPlayAnimRateTime, false);
+	}
 }
 
 void ABlader::DashEnd()
 {
+	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Red, TEXT("is Dash false"));
+
 	bladerInfo->isDuringDash = false;
 }
 
 void ABlader::Attack_End()
 {
+	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Red, TEXT("is Attack false"));
+
 	bladerInfo->isDuringAttack = false;
 }
 
@@ -293,14 +247,44 @@ void ABlader::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("SpecialAttack", IE_Pressed, this, &ABlader::SpecialAttack);
 	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ABlader::DashStart);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ABlader::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ABlader::MoveRight);
 
-	//추가 해야함
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ABlader::TurnAtRate);
-	//추가 해야함
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ABlader::LookUpAtRate);
+	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ABlader::MoveForward);
+	PlayerInputComponent->BindAxis("Move Right / Left", this, &ABlader::MoveRight);
 
+	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
+	// "turn" handles devices that provide an absolute delta, such as a mouse.
+	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+	PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("Turn Right / Left Gamepad", this, &ABlader::TurnAtRate);
+	PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &ABlader::LookUpAtRate);
+
+}
+
+void ABlader::MoveForward(float value)
+{
+	if ((Controller != nullptr) && (value != 0.0f) && !bladerInfo->isDuringAttack && !bladerInfo->isDuringSpecialAttack && !bladerInfo->isDuringDash)
+	{
+		//AttackCountInit();
+
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(Direction, value);
+	}
+}
+
+void ABlader::MoveRight(float value)
+{
+	if (((Controller != nullptr) && (value != 0.0f)) && !bladerInfo->isDuringAttack && !bladerInfo->isDuringSpecialAttack && !bladerInfo->isDuringDash)
+	{
+		//AttackCountInit();
+
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(Direction, value);
+	}
 }
