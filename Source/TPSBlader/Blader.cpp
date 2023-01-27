@@ -4,6 +4,8 @@
 #include "Blader.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -12,6 +14,7 @@
 
 ABlader::ABlader()
 {
+
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	BaseTurnRate = 45.0f;
@@ -35,7 +38,6 @@ ABlader::ABlader()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	attackMaxCount = 3;
 
 	bladerInfo = new BladerInfo();
 
@@ -55,9 +57,33 @@ ABlader::ABlader()
 	bladerInfo->isDuringAttack = false;
 	bladerInfo->isDuringSpecialAttack = false;
 	bladerInfo->isDuringDash = false;
+
+	bladerWeaponInfo = new BladerWeaponInfo();
+	
+	bladerWeaponInfo->activeWeapon = false;
+
+	LeftWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Left Weapon Collusion"));
+	LeftWeaponCollision->SetupAttachment(GetMesh(), FName("LeftWeaponBone"));
+
+	RightWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Right Weapon Collusion"));
+	RightWeaponCollision->SetupAttachment(GetMesh(), FName("RightWeaponBone"));
+
 }
 
+void ABlader::BeginPlay()
+{
+	Super::BeginPlay();
 
+	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	LeftWeaponCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	LeftWeaponCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	LeftWeaponCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
+	RightWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RightWeaponCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	RightWeaponCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	RightWeaponCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+}
 
 void ABlader::TurnAtRate(float rate)
 {
@@ -78,7 +104,9 @@ void ABlader::Attack()
 		return;
 	}
 
-	if (bladerInfo->attackCount >= attackMaxCount)
+	UE_LOG(LogTemp, Error, TEXT("Character FName :: %s"), isDuringAttack ? TEXT("true") : TEXT("false"));
+
+	if (bladerInfo->attackCount >= bladerInfo->attackCount)
 	{
 		bladerInfo->attackCount = 0;
 	}
@@ -133,7 +161,8 @@ void ABlader::SpecialAttack()
 		return;
 	}
 
-	if (bladerInfo->specialAttackCount >= attackMaxCount)
+	
+	if (bladerInfo->specialAttackCount >= bladerInfo->specialAttackCount)
 	{
 		bladerInfo->specialAttackCount = 0;
 	}
@@ -192,7 +221,7 @@ void ABlader::SpecialAttackCountInit()
 
 void ABlader::DashStart()
 {
-	if (IsValid(Rolling_AnimMontage) && !bladerInfo->isDuringDash)
+	if (IsValid(Dash_AnimMontage) && !bladerInfo->isDuringDash)
 	{
 		const FVector ForwardDir = this->GetActorRotation().Vector();
 		LaunchCharacter(ForwardDir * bladerInfo->dashSpeed, true, true);
@@ -200,7 +229,7 @@ void ABlader::DashStart()
 
 		bladerInfo->isDuringDash = true;
 
-		PlayAnimMontage(Rolling_AnimMontage, bladerInfo->dashPlayRateTime);
+		PlayAnimMontage(Dash_AnimMontage, bladerInfo->dashPlayRateTime);
 
 		GetWorldTimerManager().SetTimer(timeHander, this, &ABlader::DashEnd, bladerInfo->dashPlayAnimRateTime, false);
 	}
@@ -216,7 +245,6 @@ void ABlader::DashEnd()
 void ABlader::Attack_End()
 {
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Red, TEXT("is Attack false"));
-
 	bladerInfo->isDuringAttack = false;
 }
 
@@ -260,6 +288,8 @@ void ABlader::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &ABlader::LookUpAtRate);
 
 }
+
+
 
 void ABlader::MoveForward(float value)
 {

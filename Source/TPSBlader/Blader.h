@@ -27,6 +27,12 @@ public:
 	bool isDuringSpecialAttack;
 };
 
+struct BladerWeaponInfo
+{
+public:
+	bool activeWeapon;
+};
+
 UENUM()
 enum HeroAttackCount
 {
@@ -64,7 +70,9 @@ protected:
 	void LookUpAtRate(float rate);
 
 	void Attack();
+	void Attack_End();
 	void SpecialAttack();
+	void SpecialAttack_End();
 
 	void AttackCountInit();
 	void SpecialAttackCountInit();
@@ -72,8 +80,11 @@ protected:
 	void DashStart();
 	void DashEnd();
 
-	void Attack_End();
-	void SpecialAttack_End();
+	void DamageEvent(float DamageAmount,FDamageEvent const& DamageEvent, AController* EventIstigator, AActor* DamageCauser);
+	void LightHit();
+	void LargeHit();
+
+	void Death();
 private:
 	UPROPERTY(EditDefaultsOnly, Category = Pawn)
 		UAnimMontage* Attack_AnimMontage_1;
@@ -100,10 +111,13 @@ private:
 		UAnimMontage* Special_Attack_AnimMontage_4;
 
 	UPROPERTY(EditDefaultsOnly, Category = Pawn)
-		UAnimMontage* Rolling_AnimMontage;
+		UAnimMontage* Dash_AnimMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = Pawn)
-		UAnimMontage* BeHit_AnimMontage;
+		UAnimMontage* LargeHit_F_AnimMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = Pawn)
+		UAnimMontage* LightHit_F_AnimMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = Pawn)
 		UAnimMontage* Death_AnimMontage;
@@ -112,10 +126,19 @@ private:
 
 private:
 	BladerInfo* bladerInfo;
-	int32 attackMaxCount;
+	BladerWeaponInfo* bladerWeaponInfo;
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)override;
+	virtual void BeginPlay();
 public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Left Weapon Collusion")
+		class UBoxComponent* LeftWeaponCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Right Weapon Collusion")
+		class UBoxComponent* RightWeaponCollision;
+
 };
