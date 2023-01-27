@@ -42,7 +42,9 @@ ABlader::ABlader()
 	bladerInfo = new BladerInfo();
 
 	bladerInfo->attackCount = 0;
+	bladerInfo->attackMaxCount = 3;
 	bladerInfo->specialAttackCount = 0;
+	bladerInfo->specialAttackCount = 3;
 
 	bladerInfo->comboAttackAnimPlayRateTime = 1.0f;
 
@@ -74,6 +76,8 @@ void ABlader::BeginPlay()
 {
 	Super::BeginPlay();
 
+	LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ABlader::OnWeaponOverlap);
+
 	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	LeftWeaponCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	LeftWeaponCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -83,6 +87,8 @@ void ABlader::BeginPlay()
 	RightWeaponCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	RightWeaponCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	RightWeaponCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	
+	
 }
 
 void ABlader::TurnAtRate(float rate)
@@ -106,7 +112,7 @@ void ABlader::Attack()
 
 	UE_LOG(LogTemp, Error, TEXT("Character FName :: %s"), isDuringAttack ? TEXT("true") : TEXT("false"));
 
-	if (bladerInfo->attackCount >= bladerInfo->attackCount)
+	if (bladerInfo->attackCount >= bladerInfo->attackMaxCount)
 	{
 		bladerInfo->attackCount = 0;
 	}
@@ -162,7 +168,7 @@ void ABlader::SpecialAttack()
 	}
 
 	
-	if (bladerInfo->specialAttackCount >= bladerInfo->specialAttackCount)
+	if (bladerInfo->specialAttackCount >= bladerInfo->specialAttackMaxCount)
 	{
 		bladerInfo->specialAttackCount = 0;
 	}
@@ -242,6 +248,11 @@ void ABlader::DashEnd()
 	bladerInfo->isDuringDash = false;
 }
 
+void ABlader::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Green, TEXT("On Apply Damage"));
+}
+
 void ABlader::Attack_End()
 {
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Red, TEXT("is Attack false"));
@@ -275,20 +286,32 @@ void ABlader::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("SpecialAttack", IE_Pressed, this, &ABlader::SpecialAttack);
 	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ABlader::DashStart);
 
-
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ABlader::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ABlader::MoveRight);
-
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("Turn Right / Left Gamepad", this, &ABlader::TurnAtRate);
 	PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &ABlader::LookUpAtRate);
-
 }
 
+
+
+void ABlader::ActivateWeapon()
+{
+	
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("ActivateWeapon"));
+
+	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	RightWeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
+
+void ABlader::DeactivateWeapon()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("DeactivateWeapon"));
+
+	LeftWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RightWeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
 
 
 void ABlader::MoveForward(float value)

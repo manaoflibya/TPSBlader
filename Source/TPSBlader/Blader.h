@@ -13,7 +13,9 @@ struct BladerInfo
 {
 public:
 	int32 attackCount;
+	int32 attackMaxCount;
 	int32 specialAttackCount;
+	int32 specialAttackMaxCount;
 	float attackAnimPlayRateTime;
 	float firstAttackAnimPlayRateTime;
 	float lastAttackAnimPlayRateTime;
@@ -60,6 +62,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		float BaseLookUpRate;
 
+	virtual void ActivateWeapon();
+	virtual void DeactivateWeapon();
+
 protected:
 	void MoveForward(float value);
 
@@ -85,6 +90,17 @@ protected:
 	void LargeHit();
 
 	void Death();
+
+protected:
+	UFUNCTION()
+		void OnWeaponOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor * OtherActor,
+			UPrimitiveComponent* OtherComp, 
+			int32 OtherBodyIndex,
+			bool bFromSweep, 
+			const FHitResult& SweepResult);
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = Pawn)
 		UAnimMontage* Attack_AnimMontage_1;
